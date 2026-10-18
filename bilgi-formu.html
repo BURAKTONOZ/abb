@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerçek-Tüzel Kişi Bilgi Formu | Otomasyon Sistemi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --emerald: #059669;
+            --emerald-hover: #047857;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --amber: #f59e0b;
+            --amber-hover: #d97706;
+        }
+
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            height: 100vh; overflow: hidden;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+            display: flex; flex-direction: column;
+            color: var(--text-dark);
+        }
+
+        /* --- ÜST BİLGİ (HEADER) --- */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 11px 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.14);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #f59e0b;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .back-btn { 
+            color: white; 
+            text-decoration: none; font-size: 13px; font-weight: 600; 
+            display: inline-flex; align-items: center; gap: 8px; 
+            background: rgba(255,255,255,0.14); padding: 8px 14px; 
+            border-radius: 8px; transition: 0.25s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.26); transform: translateX(-2px); }
+
+        .header-center {
+            text-align: center;
+        }
+        .header-center h1 { 
+            margin: 0; font-size: 18px; font-weight: 800; 
+            letter-spacing: 0.6px; text-transform: uppercase; 
+            color: #f8fafc;
+        }
+        .kvkk-text { 
+            font-size: 11px; color: #cbd5e1; margin-top: 3px; 
+            font-weight: 500;
+        }
+        .kvkk-text i { color: #34d399; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-header-directory {
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.22);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: 0.2s;
+        }
+        .btn-header-directory:hover {
+            background: rgba(255,255,255,0.26);
+        }
+        .count-pill {
+            background: #f59e0b;
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 999px;
+        }
+
+        /* --- ANA ÇALIŞMA ALANI (SOL FORM + SAĞ CANLI PDF ÖNİZLEME) --- */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.02fr 0.98fr;
+            gap: 18px;
+            padding: 14px 22px;
+            max-width: 1760px;
+            width: 100%;
+            margin: 0 auto;
+            min-height: 0;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* --- KART TASARIMLARI --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+            border: 1px solid var(--border-color); 
+            padding: 14px 18px;
+        }
+        .card-header { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            border-bottom: 1.5px solid #f1f5f9;
+            padding-bottom: 9px;
+            margin-bottom: 11px;
+        }
+        .card-title { 
+            font-size: 13.5px; color: #1e293b; margin: 0; 
+            font-weight: 800; display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .card-title i {
+            color: var(--primary);
+            font-size: 15px;
+        }
+
+        /* --- 1. KART: KAYITLI KİŞİLER YÖNETİMİ --- */
+        .person-toolbar {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 8px;
+            align-items: center;
+        }
+        .person-select-wrap {
+            position: relative;
+        }
+        .person-select-wrap select {
+            width: 100%;
+            padding: 9px 12px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .btn-sm {
+            padding: 9px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-manage-list {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .btn-manage-list:hover { background: #dbeafe; }
+
+        .btn-delete-person {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        .btn-delete-person:hover:not(:disabled) { background: #fee2e2; }
+        .btn-delete-person:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .btn-clear-form {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-clear-form:hover { background: #e2e8f0; color: #0f172a; }
+
+        .btn-export {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 8px 13px;
+            font-size: 12px;
+        }
+        .btn-export:hover { background: #d1fae5; }
+
+        .btn-import {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+            padding: 8px 13px;
+            font-size: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-import:hover { background: #fef3c7; }
+        .btn-import input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+
+        /* --- 2. KART: FORM VERİLERİ --- */
+        .form-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 10px; }
+        .form-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 11px; margin-bottom: 10px; }
+        
+        label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        input, select, textarea {
+            width: 100%; padding: 9px 11px; font-size: 13px; font-family: inherit;
+            border: 1px solid #cbd5e1; border-radius: 7px; background: #f8fafc;
+            outline: none; transition: 0.2s; font-weight: 600; color: #0f172a;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.14);
+            background: #fff;
+        }
+        textarea { resize: none; height: 42px; min-height: 42px; }
+
+        /* SABİT MÜDÜR BİLGİSİ KUTUSU */
+        .manager-persist-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 9px;
+            padding: 11px 13px;
+            margin-top: 4px;
+        }
+        .manager-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .manager-box-title {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+        .persist-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #059669;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 2px 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 0.9fr 1.05fr 1.05fr;
+            gap: 10px;
+        }
+
+        /* --- 3 ANA AKSİYON BUTONU (VERİLERİ KAYDET / PDF İNDİR / YAZDIR) --- */
+        .action-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .btn-main-action {
+            padding: 14px 16px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            color: white;
+        }
+        .btn-action-save {
+            background: var(--primary);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+        }
+        .btn-action-save:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-action-pdf {
+            background: var(--danger);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+        }
+        .btn-action-pdf:hover:not(:disabled) {
+            background: var(--danger-hover);
+            transform: translateY(-2px);
+        }
+        .btn-action-pdf:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .btn-action-print {
+            background: var(--emerald);
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
+        }
+        .btn-action-print:hover {
+            background: var(--emerald-hover);
+            transform: translateY(-2px);
+        }
+
+        /* --- SAĞ PANEL: CANLI PDF ÖNİZLEME --- */
+        .preview-panel {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .pdf-toolbar {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 9px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pdf-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        .pdf-title-group i.fa-file-pdf { color: #ef4444; font-size: 16px; }
+        .pdf-filename {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+        }
+        .live-pill {
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 2px 7px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .live-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+        .pdf-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .pdf-tool-btn {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.15s;
+        }
+        .pdf-tool-btn:hover { background: #334155; color: #fff; }
+        .pdf-tool-btn.btn-tb-download {
+            background: #dc2626;
+            border-color: #ef4444;
+            color: #fff;
+        }
+        .pdf-tool-btn.btn-tb-download:hover { background: #b91c1c; }
+        .pdf-tool-btn.btn-tb-print {
+            background: #059669;
+            border-color: #10b981;
+            color: #fff;
+        }
+        .pdf-tool-btn.btn-tb-print:hover { background: #047857; }
+        .tb-divider {
+            width: 1px;
+            height: 18px;
+            background: #334155;
+            margin: 0 2px;
+        }
+        .zoom-label {
+            font-size: 11px;
+            color: #94a3b8;
+            min-width: 40px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pdf-viewport {
+            flex: 1;
+            overflow: auto;
+            background: #525659;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 18px;
+            min-height: 0;
+        }
+        .a4-scale-wrapper {
+            transform-origin: top center;
+            transition: transform 0.12s ease;
+        }
+
+        /* ==========================================================
+           BİREBİR Form.pdf A4 SAYFASI (794px x 1123px)
+           ========================================================== */
+        .a4-page {
+            width: 794px;
+            height: 1123px;
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .form-pdf-box {
+            position: absolute;
+            left: 68px;
+            top: 72px;
+            width: 656px;
+            height: 483px;
+            border: 2px solid #000000;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+
+        .form-pdf-header {
+            height: 42px;
+            background-color: #d9d9d9;
+            border-bottom: 2px solid #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: 700;
+            font-size: 13.5px;
+            line-height: 1.32;
+            letter-spacing: 0.2px;
+            color: #000000;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .form-pdf-rows {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            flex-shrink: 0;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .form-pdf-rows col.col-left { width: 44.9%; }
+        .form-pdf-rows col.col-right { width: 55.1%; }
+
+        .form-pdf-rows tr {
+            height: 20px;
+        }
+        .form-pdf-rows tr.row-first {
+            height: 29px;
+        }
+        .form-pdf-rows td {
+            border-bottom: 1px solid #000000;
+            padding: 0 6px;
+            font-size: 12.2px;
+            color: #000000;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .form-pdf-rows td.c-lbl {
+            border-right: 1.8px solid #000000;
+            text-align: left;
+            font-weight: 400;
+        }
+        .form-pdf-rows td.c-val {
+            text-align: left;
+            padding-left: 10px;
+            font-weight: 700;
+            font-size: 12.8px;
+        }
+        .form-pdf-rows tr.row-blank-8 td {
+            border-bottom: 2px solid #000000;
+            height: 20px;
+        }
+
+        .form-pdf-bottom-area {
+            flex: 1;
+            position: relative;
+            padding: 18px 10px 14px 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 12.5px;
+            color: #000000;
+        }
+
+        .form-pdf-adres-line {
+            line-height: 1.45;
+            word-break: break-word;
+            padding-right: 8px;
+        }
+        .form-pdf-adres-line .adres-val {
+            font-weight: 700;
+        }
+
+        .form-pdf-sign-block {
+            position: absolute;
+            right: 24px;
+            bottom: 34px;
+            width: 310px;
+            text-align: center;
+            font-family: "Courier New", Courier, monospace;
+            color: #000000;
+        }
+        .sign-date {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            min-height: 18px;
+        }
+        .sign-mudur {
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            min-height: 18px;
+        }
+        .sign-unvan {
+            font-size: 13px;
+            font-weight: 700;
+            min-height: 18px;
+        }
+
+        /* Aktif Yazılan Hücre Vurgusu */
+        .preview-cell-active {
+            background-color: rgba(254, 240, 138, 0.75) !important;
+            box-shadow: inset 0 0 0 1.5px #ca8a04;
+            border-radius: 2px;
+        }
+
+        /* --- KİŞİ REHBERİ VE YEDEKLEME MODALI --- */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-backdrop.open {
+            display: flex;
+        }
+        .modal-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 720px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            overflow: hidden;
+            animation: modalPop 0.2s ease-out;
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close {
+            background: rgba(255,255,255,0.14);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.28); }
+
+        .modal-backup-banner {
+            padding: 12px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .modal-backup-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .modal-backup-text i { color: #2563eb; }
+        .modal-backup-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-search-bar {
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            gap: 10px;
+        }
+        .modal-search-bar input {
+            flex: 1;
+            background: #f8fafc;
+        }
+        .modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .person-row-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+            transition: 0.2s;
+            gap: 12px;
+        }
+        .person-row-item:hover {
+            border-color: #93c5fd;
+            background: #eff6ff;
+        }
+        .person-row-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .person-row-name {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .person-row-meta {
+            font-size: 11.5px;
+            color: #64748b;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .person-row-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .btn-row-edit {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-row-edit:hover { background: #1d4ed8; }
+        .btn-row-del {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 7px 11px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-row-del:hover { background: #fecaca; }
+
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- ÖZEL ŞIK UYARI VE ONAY EKRANI (WINDOWS ALERT/CONFIRM YERİNE) --- */
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 2500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .dialog-backdrop.open {
+            display: flex;
+        }
+        .dialog-box {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 18px;
+            padding: 26px 24px 22px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dialog-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            margin: 0 auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .dialog-icon.warn {
+            background: #fef3c7;
+            color: #d97706;
+            border: 2px solid #fde68a;
+        }
+        .dialog-icon.danger {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #fecaca;
+        }
+        .dialog-icon.info {
+            background: #dbeafe;
+            color: #2563eb;
+            border: 2px solid #bfdbfe;
+        }
+        .dialog-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .dialog-message {
+            font-size: 13.5px;
+            color: #475569;
+            line-height: 1.55;
+            margin-bottom: 22px;
+        }
+        .dialog-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .dialog-btn {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .dialog-btn.cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .dialog-btn.cancel:hover { background: #e2e8f0; color: #0f172a; }
+        .dialog-btn.confirm-danger {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        .dialog-btn.confirm-danger:hover { background: #b91c1c; }
+        .dialog-btn.confirm-primary {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .dialog-btn.confirm-primary:hover { background: #1d4ed8; }
+
+        /* TOAST BİLDİRİM */
+        .toast-wrap {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast-msg {
+            background: #0f172a;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            border-left: 4px solid #10b981;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- ALT BİLGİ (FOOTER) --- */
+        .footer {
+            text-align: center; padding: 5px 0 7px 0; font-size: 11.5px; 
+            color: #64748b; font-weight: 700; letter-spacing: 1.8px;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+        .footer span { color: #2563eb; font-weight: 800; }
+
+        /* YAZDIRMA STİLİ (SADECE A4 SAYFASINI KAYDIRMADAN YAZDIRIR) */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                background: #ffffff !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #a4ScaleWrapper {
+                transform: none !important;
+                margin: 0 !important;
+            }
+            .a4-page, .a4-page * {
+                visibility: visible;
+            }
+            .a4-page {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+            .preview-cell-active {
+                background-color: transparent !important;
+                box-shadow: none !important;
+            }
+        }
+
+        @media (max-width: 1120px) {
+            html, body { height: auto; overflow: auto; }
+            .workspace { grid-template-columns: 1fr; }
+            .pdf-viewport { min-height: 700px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Ana Sayfa</a>
+        </div>
+        <div class="header-center">
+            <h1>Gerçek-Tüzel Kişi Bilgi Formu</h1>
+            <div class="kvkk-text"><i class="fas fa-shield-alt"></i> Verileriniz KVKK kapsamında yalnızca cihazınızda (tarayıcıda) saklanır. Hiçbir dış sunucuya aktarılmaz.</div>
+        </div>
+        <div class="header-right">
+            <button class="btn-header-directory" onclick="openDirectoryModal()">
+                <i class="fas fa-users-cog"></i> Düzenle / Liste <span class="count-pill" id="headerPersonCount">0</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- SOL SÜTUN: KİŞİ YÖNETİMİ VE FORM -->
+        <div class="left-panel">
+            <!-- 1. KART: KAYITLI KİŞİLER (VERİTABANI) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-address-book"></i> 1. Kayıtlı Kişiler (Veritabanı)</h2>
+                    <span style="font-size: 11.5px; color: #64748b; font-weight: 700;" id="dbSummaryText">0 Kayıtlı Kişi</span>
+                </div>
+
+                <div class="person-toolbar">
+                    <div class="person-select-wrap">
+                        <select id="personSelect" onchange="loadPerson()">
+                            <option value="">-- Yeni Kişi Girişi / Listeden Seç --</option>
+                        </select>
+                    </div>
+                    <button class="btn-sm btn-manage-list" onclick="openDirectoryModal()" title="Kişileri Düzenle, Sil veya Yedekle">
+                        <i class="fas fa-sliders"></i> Düzenle / Liste
+                    </button>
+                    <button class="btn-sm btn-delete-person" id="deleteSelectedBtn" onclick="deleteSelectedPerson()" disabled title="Seçili Kişiyi Sil">
+                        <i class="fas fa-trash-alt"></i> Kişiyi Sil
+                    </button>
+                    <button class="btn-sm btn-clear-form" onclick="clearForm()" title="Form Alanlarını Temizle">
+                        <i class="fas fa-broom"></i> Temizle
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. KART: FORM VERİLERİ -->
+            <div class="card form-card">
+                <div>
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-pen-to-square"></i> 2. Gerçek-Tüzel Kişi Bilgi Formu Verileri</h2>
+                        <span style="font-size: 11px; color: #059669; font-weight: 700;"><i class="fas fa-bolt"></i> Yazdıkça sağdaki PDF anlık güncellenir</span>
+                    </div>
+                    
+                    <div class="form-grid-2">
+                        <div>
+                            <label>Hak Sahibinin Adı Soyadı / Ünvanı</label>
+                            <input type="text" id="adsoyad" placeholder="Örn: SUAT DENLİ" oninput="updateLivePreview()" onfocus="highlightField('adsoyad')" onblur="clearHighlight()">
+                        </div>
+                        <div>
+                            <label>Açık Adres</label>
+                            <textarea id="adres" placeholder="Açık adresi buraya giriniz..." oninput="updateLivePreview()" onfocus="highlightField('adres')" onblur="clearHighlight()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-4">
+                        <div>
+                            <label>Gerçek Kişi T.C. Numarası</label>
+                            <input type="text" id="tc" maxlength="11" placeholder="11 Haneli T.C. Kimlik No" oninput="updateLivePreview()" onfocus="highlightField('tc')" onblur="clearHighlight()">
+                        </div>
+                        <div>
+                            <label>Vergi Dairesi</label>
+                            <input type="text" id="vdairesi" value="-" oninput="updateLivePreview()" onfocus="highlightField('vdairesi')" onblur="clearHighlight()">
+                        </div>
+                        <div>
+                            <label>Vergi Numarası</label>
+                            <input type="text" id="vno" value="-" placeholder="Tüzel Kişiler İçin" oninput="updateLivePreview()" onfocus="highlightField('vno')" onblur="clearHighlight()">
+                        </div>
+                        <div>
+                            <label>Telefon Numarası</label>
+                            <input type="text" id="tel" placeholder="Örn: (533) 256 8315" oninput="updateLivePreview()" onfocus="highlightField('tel')" onblur="clearHighlight()">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div>
+                            <label>Banka ve Şube Adı</label>
+                            <select id="banka" onchange="updateLivePreview()" onfocus="highlightField('banka')" onblur="clearHighlight()">
+                                <option value="">-- Banka Seçiniz --</option>
+                                <optgroup label="Kamu Bankaları">
+                                    <option value="ZİRAAT BANKASI">Ziraat Bankası</option>
+                                    <option value="VAKIF BANKASI">VakıfBank</option>
+                                    <option value="HALKBANK">Halkbank</option>
+                                    <option value="VAKIF KATILIM">Vakıf Katılım</option>
+                                    <option value="ZİRAAT KATILIM">Ziraat Katılım</option>
+                                    <option value="EMLAK KATILIM">Emlak Katılım</option>
+                                </optgroup>
+                                <optgroup label="Özel Bankalar">
+                                    <option value="TÜRKİYE İŞ BANKASI">Türkiye İş Bankası</option>
+                                    <option value="GARANTİ BBVA">Garanti BBVA</option>
+                                    <option value="AKBANK">Akbank</option>
+                                    <option value="YAPI KREDİ">Yapı Kredi</option>
+                                    <option value="QNB FİNANSBANK">QNB Finansbank</option>
+                                    <option value="DENİZBANK">DenizBank</option>
+                                    <option value="TEB">TEB (Türk Ekonomi Bankası)</option>
+                                    <option value="ŞEKERBANK">Şekerbank</option>
+                                    <option value="FİBABABANKA">Fibabanka</option>
+                                    <option value="ODEABANK">Odeabank</option>
+                                    <option value="ALTERNATİF BANK">Alternatif Bank</option>
+                                    <option value="ANADOLUBANK">Anadolubank</option>
+                                    <option value="BURGAN BANK">Burgan Bank</option>
+                                    <option value="İNG BANK">ING Bank</option>
+                                    <option value="TÜRKİYE FİNANS">Türkiye Finans</option>
+                                    <option value="KUVEYT TÜRK">Kuveyt Türk</option>
+                                    <option value="ALBARAKA TÜRK">Albaraka Türk</option>
+                                </optgroup>
+                                <optgroup label="Dijital Bankalar">
+                                    <option value="ENPARA.COM">Enpara.com</option>
+                                    <option value="HAYAT FİNANS">Hayat Finans</option>
+                                    <option value="KASİF">KASİF</option>
+                                    <option value="T.O.M. KATILIM">T.O.M. Katılım</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <label>İBAN Numarası</label>
+                            <input type="text" id="iban" value="TR" maxlength="32" oninput="updateLivePreview()" onfocus="highlightField('iban')" onblur="clearHighlight()">
+                        </div>
+                    </div>
+
+                    <!-- SABİT MÜDÜR BİLGİSİ VE İŞLEM TARİHİ -->
+                    <div class="manager-persist-box">
+                        <div class="manager-box-header">
+                            <span class="manager-box-title"><i class="fas fa-user-tie"></i> Sabit Müdür & Tarih Bilgileri</span>
+                            <span class="persist-badge"><i class="fas fa-check-circle"></i> Girilen Müdür Bilgisi Otomatik Hatırlanır</span>
+                        </div>
+                        <div class="form-grid-3">
+                            <div>
+                                <label>İşlem Tarihi</label>
+                                <input type="date" id="tarih" oninput="updateLivePreview()" onchange="updateLivePreview()" onfocus="highlightField('tarih')" onblur="clearHighlight()">
+                            </div>
+                            <div>
+                                <label>Müdür Adı Soyadı</label>
+                                <input type="text" id="mudur" placeholder="Adı Soyadı giriniz..." oninput="handleManagerInput()" onfocus="highlightField('mudur')" onblur="clearHighlight()">
+                            </div>
+                            <div>
+                                <label>Müdür Ünvanı</label>
+                                <input type="text" id="unvan" placeholder="Ünvan giriniz..." oninput="handleManagerInput()" onfocus="highlightField('unvan')" onblur="clearHighlight()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 ANA AKSİYON BUTONU: VERİLERİ KAYDET | PDF İNDİR | YAZDIR -->
+            <div class="action-row-3">
+                <button class="btn-main-action btn-action-save" id="saveBtnMain" onclick="savePersonWithFeedback()">
+                    <i class="fas fa-save"></i> Verileri Kaydet
+                </button>
+                <button class="btn-main-action btn-action-pdf" id="pdfDownloadBtn" onclick="saveAndDownloadPdf()">
+                    <i class="fas fa-file-pdf"></i> PDF İndir
+                </button>
+                <button class="btn-main-action btn-action-print" onclick="saveAndPrint()">
+                    <i class="fas fa-print"></i> Yazdır
+                </button>
+            </div>
+        </div>
+
+        <!-- SAĞ SÜTUN: BİREBİR Form.pdf CANLI ÖNİZLEME PANELİ -->
+        <div class="preview-panel">
+            <div class="pdf-toolbar">
+                <div class="pdf-title-group">
+                    <i class="fas fa-file-pdf"></i>
+                    <span class="pdf-filename" id="previewFileName">Gerçek-Tüzel Kişi Bilgi Formu.pdf</span>
+                    <span class="live-pill"><span class="live-dot"></span> CANLI</span>
+                </div>
+                <div class="pdf-controls">
+                    <button class="pdf-tool-btn" onclick="changeZoom(-0.06)" title="Uzaklaştır">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="zoom-label" id="zoomLabel">100%</span>
+                    <button class="pdf-tool-btn" onclick="changeZoom(0.06)" title="Yakınlaştır">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="pdf-tool-btn" onclick="fitPreviewToPanel()" title="Ekrana Sığdır">
+                        <i class="fas fa-compress-arrows-alt"></i> Sığdır
+                    </button>
+                    <div class="tb-divider"></div>
+                    <button class="pdf-tool-btn btn-tb-download" onclick="saveAndDownloadPdf()" title="PDF Olarak İndir">
+                        <i class="fas fa-download"></i> İndir
+                    </button>
+                    <button class="pdf-tool-btn btn-tb-print" onclick="saveAndPrint()" title="Kaydet ve Yazdır">
+                        <i class="fas fa-print"></i> Yazdır
+                    </button>
+                </div>
+            </div>
+
+            <div class="pdf-viewport" id="pdfViewport">
+                <div class="a4-scale-wrapper" id="a4ScaleWrapper">
+                    <!-- BİREBİR Form.pdf A4 SAYFASI -->
+                    <div class="a4-page" id="a4Document">
+                        
+                        <div class="form-pdf-box">
+                            <!-- Üst Gri Başlık -->
+                            <div class="form-pdf-header">
+                                <div>FEN İŞLERİ DAİRESİ BAŞKANLIĞI</div>
+                                <div>GERÇEK / TÜZEL KİŞİ BİLGİ FORMU</div>
+                            </div>
+
+                            <!-- 8 Satırlık Veri Tablosu -->
+                            <table class="form-pdf-rows">
+                                <colgroup>
+                                    <col class="col-left">
+                                    <col class="col-right">
+                                </colgroup>
+                                <tbody>
+                                    <tr class="row-first">
+                                        <td class="c-lbl">HAK SAHİBİNİN ADI SOYASI/ÜNVANI</td>
+                                        <td class="c-val" id="prev_adsoyad" data-field="adsoyad"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">GERÇEK KİŞİ T.C. NUMARASI</td>
+                                        <td class="c-val" id="prev_tc" data-field="tc"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">VERGİ DAİRESİ</td>
+                                        <td class="c-val" id="prev_vdairesi" data-field="vdairesi">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">VERGİ NUMARASI</td>
+                                        <td class="c-val" id="prev_vno" data-field="vno">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">BANKA VE ŞUBE ADI</td>
+                                        <td class="c-val" id="prev_banka" data-field="banka"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">İBAN NUMARASI</td>
+                                        <td class="c-val" id="prev_iban" data-field="iban">TR</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="c-lbl">TELEFON NUMARASI</td>
+                                        <td class="c-val" id="prev_tel" data-field="tel"></td>
+                                    </tr>
+                                    <tr class="row-blank-8">
+                                        <td class="c-lbl">&nbsp;</td>
+                                        <td class="c-val">&nbsp;</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Alt Adres ve İmza / Müdür Kutusu -->
+                            <div class="form-pdf-bottom-area">
+                                <div class="form-pdf-adres-line" data-field="adres">
+                                    <span>Adres : </span><span class="adres-val" id="prev_adres"></span>
+                                </div>
+
+                                <div class="form-pdf-sign-block">
+                                    <div class="sign-date" id="prev_tarih" data-field="tarih"></div>
+                                    <div class="sign-mudur" id="prev_mudur" data-field="mudur"></div>
+                                    <div class="sign-unvan" id="prev_unvan" data-field="unvan"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DÜZENLE / LİSTE & YEDEKLEME MODALI -->
+    <div class="modal-backdrop" id="directoryModal" onclick="if(event.target===this) closeDirectoryModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-users-cog"></i> Kayıtlı Kişiler, Düzenleme ve Yedekleme</h3>
+                <button class="modal-close" onclick="closeDirectoryModal()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- YEDEKLEME VE GERİ YÜKLEME BARI (MODAL İÇİNDE) -->
+            <div class="modal-backup-banner">
+                <div class="modal-backup-text">
+                    <i class="fas fa-database"></i>
+                    <span>Kişi Veritabanı Yedekleme İşlemleri:</span>
+                </div>
+                <div class="modal-backup-actions">
+                    <button class="btn-sm btn-export" onclick="exportData()">
+                        <i class="fas fa-download"></i> Verileri İndir (Yedekle)
+                    </button>
+                    <button class="btn-sm btn-import">
+                        <i class="fas fa-upload"></i> Yedek Yükle (.json)
+                        <input type="file" accept=".json" onchange="importData(event)">
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-search-bar">
+                <input type="text" id="modalSearchInput" placeholder="Ad soyad, T.C., banka veya telefon ile kayıtlı kişi ara..." oninput="renderDirectoryList(this.value)">
+            </div>
+            <div class="modal-body" id="modalPersonList">
+                <!-- JS ile doldurulur -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm btn-delete-person" onclick="deleteAllPeople()">
+                    <i class="fas fa-trash"></i> Tüm Kayıtları Sil
+                </button>
+                <button class="btn-sm btn-clear-form" onclick="closeDirectoryModal()">Pencereyi Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÖZEL ŞIK UYARI VE ONAY EKRANI (CUSTOM DIALOG) -->
+    <div class="dialog-backdrop" id="customDialog" onclick="if(event.target===this) closeCustomDialog()">
+        <div class="dialog-box">
+            <div class="dialog-icon warn" id="dialogIcon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="dialog-title" id="dialogTitle">Uyarı</div>
+            <div class="dialog-message" id="dialogMessage">Mesaj içeriği</div>
+            <div class="dialog-actions" id="dialogActions">
+                <!-- JS ile doldurulur -->
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <!-- İMZA -->
+    <div class="footer">
+        CREATED BY <span>TONOZ</span>
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        let db = JSON.parse(localStorage.getItem('tonozDataFinal')) || {};
+
+        // --- ÖZEL ŞIK UYARI VE ONAY PENCERESİ (WINDOWS ALERT/CONFIRM YERİNE) ---
+        function showCustomAlert(title, message, type = 'warn') {
+            const backdrop = document.getElementById('customDialog');
+            const iconEl = document.getElementById('dialogIcon');
+            const titleEl = document.getElementById('dialogTitle');
+            const msgEl = document.getElementById('dialogMessage');
+            const actionsEl = document.getElementById('dialogActions');
+
+            iconEl.className = `dialog-icon ${type}`;
+            if (type === 'danger') {
+                iconEl.innerHTML = '<i class="fas fa-circle-exclamation"></i>';
+            } else if (type === 'info') {
+                iconEl.innerHTML = '<i class="fas fa-circle-info"></i>';
+            } else {
+                iconEl.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+            }
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            actionsEl.innerHTML = `
+                <button class="dialog-btn confirm-primary" onclick="closeCustomDialog()">Tamam</button>
+            `;
+            backdrop.classList.add('open');
+        }
+
+        function showCustomConfirm(title, message, confirmText, onConfirm, type = 'danger') {
+            const backdrop = document.getElementById('customDialog');
+            const iconEl = document.getElementById('dialogIcon');
+            const titleEl = document.getElementById('dialogTitle');
+            const msgEl = document.getElementById('dialogMessage');
+            const actionsEl = document.getElementById('dialogActions');
+
+            iconEl.className = `dialog-icon ${type}`;
+            iconEl.innerHTML = type === 'danger'
+                ? '<i class="fas fa-trash-can"></i>'
+                : '<i class="fas fa-question-circle"></i>';
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            actionsEl.innerHTML = '';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'dialog-btn cancel';
+            cancelBtn.textContent = 'Vazgeç';
+            cancelBtn.onclick = closeCustomDialog;
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `dialog-btn ${type === 'danger' ? 'confirm-danger' : 'confirm-primary'}`;
+            confirmBtn.textContent = confirmText || 'Onayla';
+            confirmBtn.onclick = () => {
+                closeCustomDialog();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+
+            actionsEl.appendChild(cancelBtn);
+            actionsEl.appendChild(confirmBtn);
+            backdrop.classList.add('open');
+        }
+
+        function closeCustomDialog() {
+            document.getElementById('customDialog').classList.remove('open');
+        }
+
+        // --- BİLDİRİM (TOAST) ---
+        function showToast(msg, color = '#10b981') {
+            const wrap = document.getElementById('toastWrap');
+            const el = document.createElement('div');
+            el.className = 'toast-msg';
+            el.style.borderLeftColor = color;
+            el.innerHTML = `<i class="fas fa-check-circle" style="color:${color}"></i> <span>${msg}</span>`;
+            wrap.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transition = '0.25s ease';
+                setTimeout(() => el.remove(), 250);
+            }, 2800);
+        }
+
+        // --- BAŞLANGIÇ AYARLARI ---
+        function setTodayDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('tarih').value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        // --- KALICI MÜDÜR ADI VE ÜNVANI (LOCALSTORAGE) ---
+        function loadPersistentManager() {
+            const savedMudur = localStorage.getItem('tonozMudurAdi');
+            const savedUnvan = localStorage.getItem('tonozMudurUnvani');
+            document.getElementById('mudur').value = savedMudur !== null ? savedMudur : '';
+            document.getElementById('unvan').value = savedUnvan !== null ? savedUnvan : '';
+        }
+
+        function handleManagerInput() {
+            const mudurVal = document.getElementById('mudur').value;
+            const unvanVal = document.getElementById('unvan').value;
+            localStorage.setItem('tonozMudurAdi', mudurVal);
+            localStorage.setItem('tonozMudurUnvani', unvanVal);
+            updateLivePreview();
+        }
+
+        // --- CANLI PDF ÖNİZLEME GÜNCELLEME ---
+        function formatPreviewDate(rawDate) {
+            if (!rawDate) return "";
+            const p = rawDate.split('-');
+            if (p.length !== 3) return rawDate;
+            return `${p[2]}.${p[1]}.${p[0]}`;
+        }
+
+        function getFormattedPdfFileName() {
+            const ad = (document.getElementById('adsoyad')?.value || "").trim();
+            return ad ? `${ad} Bilgi Formu.pdf` : "Gerçek-Tüzel Kişi Bilgi Formu.pdf";
+        }
+
+        function updateLivePreview() {
+            const getV = (id) => (document.getElementById(id)?.value || "");
+            const adsoyad = getV('adsoyad');
+            const adres = getV('adres');
+            const tc = getV('tc');
+            const vno = getV('vno');
+            const vdairesi = getV('vdairesi');
+            const tel = getV('tel');
+            const banka = getV('banka');
+            const iban = getV('iban');
+            const tarih = formatPreviewDate(getV('tarih'));
+            const mudur = getV('mudur');
+            const unvan = getV('unvan');
+
+            document.getElementById('prev_adsoyad').textContent = adsoyad;
+            document.getElementById('prev_tc').textContent = tc;
+            document.getElementById('prev_vdairesi').textContent = vdairesi;
+            document.getElementById('prev_vno').textContent = vno;
+            document.getElementById('prev_banka').textContent = banka;
+            document.getElementById('prev_iban').textContent = iban;
+            document.getElementById('prev_tel').textContent = tel;
+            document.getElementById('prev_adres').textContent = adres;
+            document.getElementById('prev_tarih').textContent = tarih;
+            document.getElementById('prev_mudur').textContent = mudur;
+            document.getElementById('prev_unvan').textContent = unvan;
+
+            const fileNameEl = document.getElementById('previewFileName');
+            if (fileNameEl) {
+                fileNameEl.textContent = getFormattedPdfFileName();
+            }
+        }
+
+        function highlightField(fieldName) {
+            clearHighlight();
+            document.querySelectorAll(`[data-field="${fieldName}"]`).forEach(el => {
+                el.classList.add('preview-cell-active');
+            });
+        }
+
+        function clearHighlight() {
+            document.querySelectorAll('.preview-cell-active').forEach(el => {
+                el.classList.remove('preview-cell-active');
+            });
+        }
+
+        function setZoom(scale) {
+            currentZoom = Math.min(Math.max(scale, 0.4), 1.3);
+            const wrapper = document.getElementById('a4ScaleWrapper');
+            const label = document.getElementById('zoomLabel');
+            if (wrapper) {
+                wrapper.style.transform = `scale(${currentZoom})`;
+                wrapper.style.marginBottom = `${(currentZoom - 1) * 1123}px`;
+            }
+            if (label) {
+                label.textContent = `${Math.round(currentZoom * 100)}%`;
+            }
+        }
+
+        function changeZoom(delta) {
+            setZoom(currentZoom + delta);
+        }
+
+        function fitPreviewToPanel() {
+            const viewport = document.getElementById('pdfViewport');
+            if (!viewport) return;
+            const availH = viewport.clientHeight - 36;
+            const availW = viewport.clientWidth - 36;
+            const scaleH = availH / 1123;
+            const scaleW = availW / 794;
+            setZoom(Math.min(scaleH, scaleW, 1));
+        }
+
+        // --- VERİTABANI VE KİŞİ YÖNETİMİ ---
+        function updateSelect() {
+            const select = document.getElementById('personSelect');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- Yeni Kişi Girişi / Listeden Seç --</option>';
+            const kisiler = Object.values(db).sort((a, b) => (a.adsoyad || '').localeCompare(b.adsoyad || '', 'tr'));
+            kisiler.forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k.adsoyad; 
+                opt.textContent = k.adsoyad;
+                select.appendChild(opt);
+            });
+
+            if (currentVal && db[currentVal]) {
+                select.value = currentVal;
+            }
+
+            const count = kisiler.length;
+            document.getElementById('headerPersonCount').textContent = count;
+            document.getElementById('dbSummaryText').textContent = `${count} Kayıtlı Kişi`;
+            document.getElementById('deleteSelectedBtn').disabled = !select.value;
+        }
+
+        function savePerson(silent = false) {
+            const adsoyad = document.getElementById('adsoyad').value.trim();
+            if (!adsoyad) {
+                showCustomAlert(
+                    "Eksik Bilgi",
+                    "İşlem yapabilmek için 'Hak Sahibinin Adı Soyadı / Ünvanı' alanını doldurmalısınız.",
+                    "warn"
+                );
+                return false;
+            }
+
+            // Müdür bilgilerini de kalıcı olarak kaydet
+            localStorage.setItem('tonozMudurAdi', document.getElementById('mudur').value);
+            localStorage.setItem('tonozMudurUnvani', document.getElementById('unvan').value);
+
+            db[adsoyad] = {
+                adsoyad: adsoyad,
+                adres: document.getElementById('adres').value,
+                tc: document.getElementById('tc').value,
+                vno: document.getElementById('vno').value,
+                vdairesi: document.getElementById('vdairesi').value,
+                tel: document.getElementById('tel').value,
+                banka: document.getElementById('banka').value,
+                iban: document.getElementById('iban').value
+            };
+
+            localStorage.setItem('tonozDataFinal', JSON.stringify(db));
+            updateSelect();
+            document.getElementById('personSelect').value = adsoyad;
+            document.getElementById('deleteSelectedBtn').disabled = false;
+
+            if (!silent) {
+                showToast(`"${adsoyad}" bilgileri kaydedildi.`);
+            }
+            return true;
+        }
+
+        function savePersonWithFeedback() {
+            if (!savePerson(false)) return;
+            const btn = document.getElementById('saveBtnMain');
+            const orig = btn.innerHTML;
+            btn.innerHTML = "<i class='fas fa-check'></i> Kaydedildi!";
+            btn.style.background = "#059669";
+            setTimeout(() => {
+                btn.innerHTML = orig;
+                btn.style.background = "";
+            }, 2000);
+        }
+
+        function loadPerson() {
+            const val = document.getElementById('personSelect').value;
+            document.getElementById('deleteSelectedBtn').disabled = !val;
+            if (!val) { clearForm(); return; }
+            const k = db[val];
+            if (!k) return;
+            document.getElementById('adsoyad').value = k.adsoyad || '';
+            document.getElementById('adres').value = k.adres || '';
+            document.getElementById('tc').value = k.tc || '';
+            document.getElementById('vno').value = k.vno || '-';
+            document.getElementById('vdairesi').value = k.vdairesi || '-';
+            document.getElementById('tel').value = k.tel || '';
+            document.getElementById('banka').value = k.banka || '';
+            document.getElementById('iban').value = k.iban || 'TR';
+            updateLivePreview();
+        }
+
+        function clearForm() {
+            document.getElementById('personSelect').value = "";
+            document.getElementById('deleteSelectedBtn').disabled = true;
+            document.getElementById('adsoyad').value = "";
+            document.getElementById('adres').value = "";
+            document.getElementById('tc').value = "";
+            document.getElementById('vno').value = "-";
+            document.getElementById('vdairesi').value = "-";
+            document.getElementById('tel').value = "";
+            document.getElementById('banka').value = "";
+            document.getElementById('iban').value = "TR";
+            setTodayDate();
+            loadPersistentManager();
+            updateLivePreview();
+        }
+
+        // --- TEK TEK VEYA SEÇİLİ KİŞİYİ SİLME (ÖZEL MODAL İLE) ---
+        function deleteSelectedPerson() {
+            const val = document.getElementById('personSelect').value;
+            if (!val || !db[val]) return;
+
+            showCustomConfirm(
+                "Kişi Kaydını Sil",
+                `"${val}" isimli kaydı veritabanından silmek istediğinize emin misiniz?`,
+                "Evet, Sil",
+                () => {
+                    delete db[val];
+                    localStorage.setItem('tonozDataFinal', JSON.stringify(db));
+                    clearForm();
+                    updateSelect();
+                    showToast(`"${val}" kaydı silindi.`, '#ef4444');
+                },
+                "danger"
+            );
+        }
+
+        function deletePersonByName(name) {
+            if (!db[name]) return;
+
+            showCustomConfirm(
+                "Kişi Kaydını Sil",
+                `"${name}" isimli kaydı veritabanından silmek istediğinize emin misiniz?`,
+                "Evet, Sil",
+                () => {
+                    const currentSelected = document.getElementById('personSelect').value;
+                    delete db[name];
+                    localStorage.setItem('tonozDataFinal', JSON.stringify(db));
+
+                    if (currentSelected === name) {
+                        clearForm();
+                    }
+                    updateSelect();
+                    renderDirectoryList(document.getElementById('modalSearchInput').value);
+                    showToast(`"${name}" kaydı silindi.`, '#ef4444');
+                },
+                "danger"
+            );
+        }
+
+        function deleteAllPeople() {
+            const count = Object.keys(db).length;
+            if (count === 0) {
+                showCustomAlert("Kayıt Bulunamadı", "Silinecek kayıtlı kişi bulunmuyor.", "info");
+                return;
+            }
+
+            showCustomConfirm(
+                "Tüm Kayıtları Sil",
+                `Kayıtlı olan tüm (${count}) kişiyi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+                "Tümünü Sil",
+                () => {
+                    db = {};
+                    localStorage.setItem('tonozDataFinal', JSON.stringify(db));
+                    clearForm();
+                    updateSelect();
+                    renderDirectoryList();
+                    showToast("Tüm kişi kayıtları silindi.", '#ef4444');
+                },
+                "danger"
+            );
+        }
+
+        // --- KİŞİ REHBERİ MODALI ---
+        function openDirectoryModal() {
+            document.getElementById('modalSearchInput').value = '';
+            renderDirectoryList('');
+            document.getElementById('directoryModal').classList.add('open');
+        }
+
+        function closeDirectoryModal() {
+            document.getElementById('directoryModal').classList.remove('open');
+        }
+
+        function selectPersonFromModal(name) {
+            if (!db[name]) return;
+            document.getElementById('personSelect').value = name;
+            loadPerson();
+            closeDirectoryModal();
+            showToast(`"${name}" bilgileri forma yüklendi.`);
+        }
+
+        function renderDirectoryList(filter = '') {
+            const container = document.getElementById('modalPersonList');
+            container.innerHTML = '';
+            const list = Object.values(db).sort((a, b) => (a.adsoyad || '').localeCompare(b.adsoyad || '', 'tr'));
+            const q = filter.trim().toLocaleLowerCase('tr-TR');
+            const filtered = q
+                ? list.filter(k =>
+                    (k.adsoyad || '').toLocaleLowerCase('tr-TR').includes(q) ||
+                    (k.tc || '').includes(q) ||
+                    (k.banka || '').toLocaleLowerCase('tr-TR').includes(q) ||
+                    (k.tel || '').includes(q)
+                )
+                : list;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:32px 16px; color:#64748b; font-size:13.5px;">
+                        <i class="fas fa-folder-open" style="font-size:28px; margin-bottom:8px; display:block; opacity:0.5;"></i>
+                        ${list.length === 0 ? 'Henüz kayıtlı kişi bulunmuyor.' : 'Aramanızla eşleşen kişi bulunamadı.'}
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(k => {
+                const row = document.createElement('div');
+                row.className = 'person-row-item';
+
+                const info = document.createElement('div');
+                info.className = 'person-row-info';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'person-row-name';
+                nameEl.textContent = k.adsoyad;
+
+                const metaEl = document.createElement('div');
+                metaEl.className = 'person-row-meta';
+                const parts = [];
+                if (k.tc) parts.push(`T.C.: ${k.tc}`);
+                if (k.banka) parts.push(k.banka);
+                if (k.tel) parts.push(`Tel: ${k.tel}`);
+                metaEl.textContent = parts.join(' • ') || 'Detay belirtilmedi';
+
+                info.appendChild(nameEl);
+                info.appendChild(metaEl);
+
+                const actions = document.createElement('div');
+                actions.className = 'person-row-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-row-edit';
+                editBtn.innerHTML = '<i class="fas fa-check"></i> Seç / Düzenle';
+                editBtn.onclick = () => selectPersonFromModal(k.adsoyad);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-row-del';
+                delBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Sil';
+                delBtn.onclick = () => deletePersonByName(k.adsoyad);
+
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+
+                row.appendChild(info);
+                row.appendChild(actions);
+                container.appendChild(row);
+            });
+        }
+
+        // --- KİŞİLERİ YEDEKLEME (İNDİRME & GERİ YÜKLEME) ---
+        function exportData() {
+            if (Object.keys(db).length === 0) {
+                showCustomAlert("Yedeklenecek Veri Yok", "İndirilecek kayıtlı kişi bulunamadı. Önce kişi kaydedin.", "info");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "Gerçek-Tüzel_Kişi_Rehberi_Yedek.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showToast("Kişi listesi yedeği (.json) indirildi.");
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedDb = JSON.parse(e.target.result);
+                    db = { ...db, ...importedDb }; 
+                    localStorage.setItem('tonozDataFinal', JSON.stringify(db));
+                    updateSelect();
+                    renderDirectoryList(document.getElementById('modalSearchInput').value);
+                    showToast(`${Object.keys(importedDb).length} kişi başarıyla yüklendi!`);
+                } catch (error) {
+                    showCustomAlert(
+                        "Geçersiz Dosya",
+                        "Lütfen daha önce indirdiğiniz .json uzantılı yedek dosyasını seçin.",
+                        "danger"
+                    );
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // --- KAYMASIZ, BİREBİR A4 CANVAS -> PDF ÜRETİCİ ---
+        function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            let currY = y;
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    ctx.fillText(line.trimEnd(), x, currY);
+                    line = words[n] + ' ';
+                    currY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line) {
+                ctx.fillText(line.trimEnd(), x, currY);
+            }
+        }
+
+        function renderExactA4Canvas() {
+            const scale = 3; // 3x yüksek çözünürlük (2382 x 3369 px)
+            const canvas = document.createElement('canvas');
+            canvas.width = 794 * scale;
+            canvas.height = 1123 * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+
+            // Tam A4 Beyaz Arka Plan
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 794, 1123);
+
+            const boxX = 68;
+            const boxY = 72;
+            const boxW = 656;
+            const boxH = 483;
+            const headerH = 42;
+            const colSplitX = boxX + Math.round(boxW * 0.449); // 362.5px
+
+            // 1. Üst Gri Başlık Kutusu
+            ctx.fillStyle = '#d9d9d9';
+            ctx.fillRect(boxX, boxY, boxW, headerH);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 13.5px "Courier New", Courier, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('FEN İŞLERİ DAİRESİ BAŞKANLIĞI', boxX + boxW / 2, boxY + 13.5);
+            ctx.fillText('GERÇEK / TÜZEL KİŞİ BİLGİ FORMU', boxX + boxW / 2, boxY + 30.5);
+
+            // Başlık Altı Kalın Çizgi
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(boxX, boxY + headerH);
+            ctx.lineTo(boxX + boxW, boxY + headerH);
+            ctx.stroke();
+
+            // 2. 8 Satırlık Veri Tablosu
+            const getV = (id) => (document.getElementById(id)?.value || "");
+            const rows = [
+                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYASI/ÜNVANI', val: getV('adsoyad') },
+                { h: 20, lbl: 'GERÇEK KİŞİ T.C. NUMARASI', val: getV('tc') },
+                { h: 20, lbl: 'VERGİ DAİRESİ', val: getV('vdairesi') },
+                { h: 20, lbl: 'VERGİ NUMARASI', val: getV('vno') },
+                { h: 20, lbl: 'BANKA VE ŞUBE ADI', val: getV('banka') },
+                { h: 20, lbl: 'İBAN NUMARASI', val: getV('iban') },
+                { h: 20, lbl: 'TELEFON NUMARASI', val: getV('tel') },
+                { h: 20, lbl: '', val: '', thickBottom: true }
+            ];
+
+            let currY = boxY + headerH;
+            rows.forEach((r) => {
+                const midY = currY + r.h / 2 + 0.5;
+
+                // Sol etiket
+                if (r.lbl) {
+                    ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(r.lbl, boxX + 6, midY);
+                }
+
+                // Sağ değer
+                if (r.val) {
+                    ctx.font = 'bold 12.8px "Courier New", Courier, monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(r.val, colSplitX + 10, midY);
+                }
+
+                currY += r.h;
+
+                // Satır alt çizgisi
+                ctx.beginPath();
+                ctx.lineWidth = r.thickBottom ? 2 : 1;
+                ctx.moveTo(boxX, currY);
+                ctx.lineTo(boxX + boxW, currY);
+                ctx.stroke();
+            });
+
+            // Sütun ayırıcı dikey çizgi
+            ctx.beginPath();
+            ctx.lineWidth = 1.8;
+            ctx.moveTo(colSplitX, boxY + headerH);
+            ctx.lineTo(colSplitX, currY);
+            ctx.stroke();
+
+            // 3. Alt Adres Alanı
+            const adresTopY = currY + 26;
+            ctx.font = 'normal 12.5px "Courier New", Courier, monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            const prefix = 'Adres : ';
+            ctx.fillText(prefix, boxX + 5, adresTopY);
+
+            const prefixW = ctx.measureText(prefix).width;
+            const adresVal = getV('adres');
+            if (adresVal) {
+                ctx.font = 'bold 12.5px "Courier New", Courier, monospace';
+                wrapCanvasText(ctx, adresVal, boxX + 5 + prefixW, adresTopY, boxW - prefixW - 18, 18);
+            }
+
+            // 4. Sağ Alt İmza / Tarih / Müdür Bloğu
+            const signCenterX = boxX + boxW - 24 - 155; // sağdan 24px içeride, 310px genişlikli bloğun ortası
+            const bottomY = boxY + boxH;
+            const tarihStr = formatPreviewDate(getV('tarih'));
+            const mudurStr = getV('mudur');
+            const unvanStr = getV('unvan');
+
+            ctx.textAlign = 'center';
+            if (tarihStr) {
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.fillText(tarihStr, signCenterX, bottomY - 90);
+            }
+            if (mudurStr) {
+                ctx.font = 'bold 13.5px "Courier New", Courier, monospace';
+                ctx.fillText(mudurStr, signCenterX, bottomY - 58);
+            }
+            if (unvanStr) {
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.fillText(unvanStr, signCenterX, bottomY - 38);
+            }
+
+            // 5. Dış Kalın Çerçeve
+            ctx.lineWidth = 2;
+            ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+            return canvas;
+        }
+
+        // --- PDF OLARAK İNDİR VE YAZDIR ---
+        function saveAndDownloadPdf() {
+            if (!savePerson(true)) return;
+
+            const btn = document.getElementById('pdfDownloadBtn');
+            const dosyaAdi = getFormattedPdfFileName();
+
+            clearHighlight();
+            btn.disabled = true;
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> İndiriliyor...";
+
+            setTimeout(() => {
+                try {
+                    const canvas = renderExactA4Canvas();
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    // Tam (0, 0) noktasından 210x297mm A4 boyutunda yerleştirir, kayma/boşluk oluşmaz
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                    pdf.save(dosyaAdi);
+
+                    btn.disabled = false;
+                    btn.innerHTML = "<i class='fas fa-check-circle'></i> İndirildi!";
+                    showToast(`"${dosyaAdi}" başarıyla indirildi.`);
+                    setTimeout(() => {
+                        btn.innerHTML = origHTML;
+                    }, 2200);
+                } catch (err) {
+                    console.error(err);
+                    btn.disabled = false;
+                    btn.innerHTML = origHTML;
+                    showCustomAlert("Hata", "PDF oluşturulurken bir sorun oluştu.", "danger");
+                }
+            }, 50);
+        }
+
+        function saveAndPrint() {
+            if (!savePerson(false)) return;
+            clearHighlight();
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        window.addEventListener('resize', fitPreviewToPanel);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCustomDialog();
+                closeDirectoryModal();
+            }
+        });
+
+        window.onload = function() {
+            setTodayDate();
+            loadPersistentManager();
+            updateSelect();
+
+            const params = new URLSearchParams(window.location.search);
+            const personParam = params.get('person');
+            if (personParam && db[personParam]) {
+                document.getElementById('personSelect').value = personParam;
+                loadPerson();
+            } else {
+                updateLivePreview();
+            }
+
+            setTimeout(fitPreviewToPanel, 50);
+        };
+    </script>
+</body>
+</html>
