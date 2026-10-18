@@ -1,2 +1,2 @@
 # abb
-Ankara Büyükşehir Belediyesi Personel Programları
+Personel Programları
