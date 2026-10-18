@@ -401,13 +401,13 @@
         }
         .pdf-title-group i.fa-file-pdf { color: #ef4444; font-size: 16px; }
         .pdf-filename {
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 700;
             color: #e2e8f0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 240px;
+            max-width: 180px;
         }
         .live-pill {
             font-size: 10px;
@@ -433,22 +433,29 @@
             align-items: center;
             gap: 5px;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
         .pdf-tool-btn {
             background: #1e293b;
             color: #cbd5e1;
             border: 1px solid #334155;
-            padding: 5px 9px;
+            padding: 5px 8px;
             border-radius: 6px;
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 5px;
             transition: 0.15s;
+            white-space: nowrap;
         }
         .pdf-tool-btn:hover { background: #334155; color: #fff; }
+        .pdf-tool-btn.active {
+            background: #2563eb;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
         .pdf-tool-btn.btn-tb-download {
             background: #dc2626;
             border-color: #ef4444;
@@ -470,7 +477,7 @@
         .zoom-label {
             font-size: 11px;
             color: #94a3b8;
-            min-width: 40px;
+            min-width: 38px;
             text-align: center;
             font-variant-numeric: tabular-nums;
         }
@@ -482,12 +489,12 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 18px;
+            padding: 14px;
             min-height: 0;
         }
         .a4-scale-wrapper {
-            transform-origin: top center;
-            transition: transform 0.12s ease;
+            position: relative;
+            flex-shrink: 0;
         }
 
         /* ==========================================================
@@ -502,6 +509,8 @@
             position: relative;
             overflow: hidden;
             font-family: "Courier New", Courier, monospace;
+            transform-origin: top left;
+            transition: transform 0.12s ease;
         }
 
         .form-pdf-box {
@@ -952,6 +961,8 @@
             #a4ScaleWrapper {
                 transform: none !important;
                 margin: 0 !important;
+                width: auto !important;
+                height: auto !important;
             }
             .a4-page, .a4-page * {
                 visibility: visible;
@@ -964,6 +975,7 @@
                 height: 297mm !important;
                 box-shadow: none !important;
                 margin: 0 !important;
+                transform: none !important;
             }
             .preview-cell-active {
                 background-color: transparent !important;
@@ -1162,8 +1174,11 @@
                     <button class="pdf-tool-btn" onclick="changeZoom(0.06)" title="Yakınlaştır">
                         <i class="fas fa-search-plus"></i>
                     </button>
-                    <button class="pdf-tool-btn" onclick="fitPreviewToPanel()" title="Ekrana Sığdır">
-                        <i class="fas fa-compress-arrows-alt"></i> Sığdır
+                    <button class="pdf-tool-btn active" id="btnFitWidth" onclick="fitPreviewToWidth()" title="Genişliğe Sığdır (Yatayda Tam Oturt)">
+                        <i class="fas fa-arrows-alt-h"></i> Genişliğe Sığdır
+                    </button>
+                    <button class="pdf-tool-btn" id="btnFitPage" onclick="fitPreviewToPage()" title="Sayfaya Sığdır (Tüm Sayfayı Gör)">
+                        <i class="fas fa-compress-arrows-alt"></i> Sayfaya Sığdır
                     </button>
                     <div class="tb-divider"></div>
                     <button class="pdf-tool-btn btn-tb-download" onclick="saveAndDownloadPdf()" title="PDF Olarak İndir">
@@ -1313,6 +1328,7 @@
 
     <script>
         let currentZoom = 1;
+        let currentFitMode = 'width';
         let db = JSON.parse(localStorage.getItem('tonozDataFinal')) || {};
 
         // --- ÖZEL ŞIK UYARI VE ONAY PENCERESİ (WINDOWS ALERT/CONFIRM YERİNE) ---
@@ -1476,31 +1492,69 @@
             });
         }
 
-        function setZoom(scale) {
-            currentZoom = Math.min(Math.max(scale, 0.4), 1.3);
+        function updateFitButtons(mode) {
+            currentFitMode = mode;
+            const btnWidth = document.getElementById('btnFitWidth');
+            const btnPage = document.getElementById('btnFitPage');
+            if (btnWidth) btnWidth.classList.toggle('active', mode === 'width');
+            if (btnPage) btnPage.classList.toggle('active', mode === 'page');
+        }
+
+        function setZoom(scale, mode = 'manual') {
+            currentZoom = Math.min(Math.max(scale, 0.35), 1.6);
             const wrapper = document.getElementById('a4ScaleWrapper');
+            const page = document.getElementById('a4Document');
             const label = document.getElementById('zoomLabel');
-            if (wrapper) {
-                wrapper.style.transform = `scale(${currentZoom})`;
-                wrapper.style.marginBottom = `${(currentZoom - 1) * 1123}px`;
+            if (wrapper && page) {
+                page.style.transform = `scale(${currentZoom})`;
+                wrapper.style.width = `${Math.round(794 * currentZoom)}px`;
+                wrapper.style.height = `${Math.round(1123 * currentZoom)}px`;
             }
             if (label) {
                 label.textContent = `${Math.round(currentZoom * 100)}%`;
             }
+            updateFitButtons(mode);
         }
 
         function changeZoom(delta) {
-            setZoom(currentZoom + delta);
+            setZoom(currentZoom + delta, 'manual');
+        }
+
+        function fitPreviewToWidth() {
+            const viewport = document.getElementById('pdfViewport');
+            if (!viewport) return;
+            // Yatayda tam sığması için iç boşluk (padding: 14px * 2 = 28px) düşülür
+            let availW = viewport.clientWidth - 28;
+            if (availW <= 0) return;
+            setZoom(availW / 794, 'width');
+            // Dikey kaydırma çubuğu oluştuysa yeni kullanılabilir genişliğe göre tekrar hizala
+            const newAvailW = viewport.clientWidth - 28;
+            if (newAvailW > 0 && newAvailW !== availW) {
+                setZoom(newAvailW / 794, 'width');
+            }
+            viewport.scrollTop = 0;
+            viewport.scrollLeft = 0;
+        }
+
+        function fitPreviewToPage() {
+            const viewport = document.getElementById('pdfViewport');
+            if (!viewport) return;
+            const availH = viewport.clientHeight - 28;
+            const availW = viewport.clientWidth - 28;
+            if (availH <= 0 || availW <= 0) return;
+            const scaleH = availH / 1123;
+            const scaleW = availW / 794;
+            setZoom(Math.min(scaleH, scaleW), 'page');
+            viewport.scrollTop = 0;
+            viewport.scrollLeft = 0;
         }
 
         function fitPreviewToPanel() {
-            const viewport = document.getElementById('pdfViewport');
-            if (!viewport) return;
-            const availH = viewport.clientHeight - 36;
-            const availW = viewport.clientWidth - 36;
-            const scaleH = availH / 1123;
-            const scaleW = availW / 794;
-            setZoom(Math.min(scaleH, scaleW, 1));
+            if (currentFitMode === 'page') {
+                fitPreviewToPage();
+            } else if (currentFitMode === 'width') {
+                fitPreviewToWidth();
+            }
         }
 
         // --- VERİTABANI VE KİŞİ YÖNETİMİ ---
@@ -2026,7 +2080,8 @@
                 updateLivePreview();
             }
 
-            setTimeout(fitPreviewToPanel, 50);
+            fitPreviewToWidth();
+            setTimeout(fitPreviewToWidth, 50);
         };
     </script>
 </body>
