@@ -518,7 +518,7 @@
             left: 68px;
             top: 72px;
             width: 656px;
-            height: 483px;
+            min-height: 483px;
             border: 2px solid #000000;
             display: flex;
             flex-direction: column;
@@ -558,7 +558,10 @@
             height: 20px;
         }
         .form-pdf-rows tr.row-first {
-            height: 29px;
+            min-height: 29px;
+            height: auto;
+            padding-top: 3px;
+            padding-bottom: 3px;
         }
         .form-pdf-rows td {
             border-bottom: 1px solid #000000;
@@ -584,6 +587,13 @@
             font-weight: 400;
             font-size: 12.6px;
         }
+        .form-pdf-rows tr.row-first td.c-val {
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.25;
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
         .form-pdf-rows tr.row-adres-8 td {
             border-bottom: 2px solid #000000;
             min-height: 20px;
@@ -605,6 +615,7 @@
             font-family: "Courier New", Courier, monospace;
             font-size: 12.5px;
             color: #000000;
+            min-height: 130px;
         }
 
         /* SAĞ ALT TARİH, MÜDÜR VE ÜNVAN KALIN (BOLD) */
@@ -1147,7 +1158,7 @@
                 </div>
             </div>
 
-            <!-- 3 ANA AKSİYON BUTONU: VERİLERİ KAYDET | PDF İNDİR | YAZDIR -->
+            <!-- 3 ANA AKSİYON BULONU: VERİLERİ KAYDET | PDF İNDİR | YAZDIR -->
             <div class="action-row-3">
                 <button class="btn-main-action btn-action-save" id="saveBtnMain" onclick="savePersonWithFeedback()">
                     <i class="fas fa-save"></i> Verileri Kaydet
@@ -1205,7 +1216,7 @@
                                 <div>GERÇEK / TÜZEL KİŞİ BİLGİ FORMU</div>
                             </div>
 
-                            <!-- 8 Satırlık Veri Tablosu (Etiketler Kalın, Girilen Veriler Normal) -->
+                            <!-- 8 Satırlık Veri Tablosu (Eşit Sütun Genişliği, Ad ve Adres Uzunsa Alta Kayar) -->
                             <table class="form-pdf-rows">
                                 <colgroup>
                                     <col class="col-left">
@@ -1304,7 +1315,7 @@
         </div>
     </div>
 
-    <!-- ÖZEL ŞIK UYARI VE ONAY EKRANI (CUSTOM DIALOG) -->
+    <!-- ÖZEL ŞIK UYARI VE ONAY EKRANI -->
     <div class="dialog-backdrop" id="customDialog" onclick="if(event.target===this) closeCustomDialog()">
         <div class="dialog-box">
             <div class="dialog-icon warn" id="dialogIcon">
@@ -1330,7 +1341,7 @@
         let currentFitMode = 'width';
         let db = JSON.parse(localStorage.getItem('tonozDataFinal')) || {};
 
-        // --- ÖZEL ŞIK UYARI VE ONAY PENCERESİ (WINDOWS ALERT/CONFIRM YERİNE) ---
+        // --- ÖZEL ŞIK UYARI VE ONAY PENCERESİ ---
         function showCustomAlert(title, message, type = 'warn') {
             const backdrop = document.getElementById('customDialog');
             const iconEl = document.getElementById('dialogIcon');
@@ -1659,7 +1670,7 @@
             updateLivePreview();
         }
 
-        // --- TEK TEK VEYA SEÇİLİ KİŞİYİ SİLME (ÖZEL MODAL İLE) ---
+        // --- TEK TEK VEYA SEÇİLİ KİŞİYİ SİLME ---
         function deleteSelectedPerson() {
             const val = document.getElementById('personSelect').value;
             if (!val || !db[val]) return;
@@ -1914,16 +1925,23 @@
 
             // 2. 8 Satırlık Veri Tablosu
             const getV = (id) => (document.getElementById(id)?.value || "");
+            const adsoyadText = getV('adsoyad');
             const adresText = getV('adres');
 
-            // Adres uzunluğuna göre 8. satır yüksekliğini hesapla (NORMAL YAZI)
-            ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
             const rightColMaxW = (boxX + boxW) - colSplitX - 16;
+
+            // 1. Satır (Ad Soyad / Unvan) uzunsa çoklu satır yüksekliği hesapla (NORMAL YAZI)
+            ctx.font = 'normal 12.6px "Courier New", Courier, monospace';
+            const adsoyadLines = getWrappedLines(ctx, adsoyadText, rightColMaxW);
+            const adsoyadRowH = Math.max(29, adsoyadLines.length * 17 + 8);
+
+            // 8. Satır (Adres) uzunsa çoklu satır yüksekliği hesapla
+            ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
             const adresLines = getWrappedLines(ctx, adresText, rightColMaxW);
             const adresRowH = Math.max(20, adresLines.length * 16 + 6);
 
             const rows = [
-                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYADI/ÜNVANI', val: getV('adsoyad') },
+                { h: adsoyadRowH, lbl: 'HAK SAHİBİNİN ADI SOYADI/ÜNVANI', val: adsoyadText, isMultiline: true, lines: adsoyadLines },
                 { h: 20, lbl: 'GERÇEK KİŞİ T.C. NUMARASI', val: getV('tc') },
                 { h: 20, lbl: 'VERGİ DAİRESİ', val: getV('vdairesi') },
                 { h: 20, lbl: 'VERGİ NUMARASI', val: getV('vno') },
@@ -1943,7 +1961,7 @@
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
                     ctx.fillStyle = '#000000';
-                    ctx.fillText(r.lbl, boxX + 6, r.isMultiline ? currY + 10.5 : midY);
+                    ctx.fillText(r.lbl, boxX + 6, r.isMultiline ? currY + (r.h / (r.lines.length > 1 ? r.lines.length + 0.5 : 2)) : midY);
                 }
 
                 // Sağ değer (Doldurulan Veriler): NORMAL
@@ -1951,10 +1969,11 @@
                     ctx.textAlign = 'left';
                     ctx.fillStyle = '#000000';
                     if (r.isMultiline && r.lines.length > 1) {
-                        ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
+                        ctx.font = 'normal 12.6px "Courier New", Courier, monospace';
                         ctx.textBaseline = 'middle';
+                        const startY = currY + (r.h / 2) - ((r.lines.length - 1) * 8);
                         r.lines.forEach((ln, idx) => {
-                            ctx.fillText(ln, colSplitX + 10, currY + 10.5 + idx * 16);
+                            ctx.fillText(ln, colSplitX + 10, startY + (idx * 16));
                         });
                     } else {
                         ctx.font = 'normal 12.6px "Courier New", Courier, monospace';
