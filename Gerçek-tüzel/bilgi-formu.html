@@ -498,7 +498,7 @@
         }
 
         /* ==========================================================
-           BİREBİR YENİ Form.pdf A4 SAYFASI (794px x 1123px)
+           BİREBİR Form.pdf A4 SAYFASI (794px x 1123px)
            ========================================================== */
         .a4-page {
             width: 794px;
@@ -571,16 +571,18 @@
             text-overflow: ellipsis;
             font-family: "Courier New", Courier, monospace;
         }
+        /* SOL SÜTUN FORM ETİKETLERİ KALIN (BOLD) */
         .form-pdf-rows td.c-lbl {
             border-right: 1.8px solid #000000;
             text-align: left;
-            font-weight: 400;
+            font-weight: 700;
         }
+        /* SAĞ SÜTUN DOLDURULAN VERİLER NORMAL */
         .form-pdf-rows td.c-val {
             text-align: left;
             padding-left: 10px;
-            font-weight: 700;
-            font-size: 12.8px;
+            font-weight: 400;
+            font-size: 12.6px;
         }
         .form-pdf-rows tr.row-adres-8 td {
             border-bottom: 2px solid #000000;
@@ -593,6 +595,7 @@
             white-space: normal;
             word-break: break-word;
             line-height: 1.25;
+            font-weight: 400;
         }
 
         .form-pdf-bottom-area {
@@ -604,6 +607,7 @@
             color: #000000;
         }
 
+        /* SAĞ ALT TARİH, MÜDÜR VE ÜNVAN KALIN (BOLD) */
         .form-pdf-sign-block {
             position: absolute;
             right: 24px;
@@ -811,7 +815,7 @@
             align-items: center;
         }
 
-        /* --- ÖZEL ŞIK UYARI VE ONAY EKRANI (WINDOWS ALERT/CONFIRM YERİNE) --- */
+        /* --- ÖZEL ŞIK UYARI VE ONAY EKRANI --- */
         .dialog-backdrop {
             position: fixed;
             inset: 0;
@@ -993,7 +997,7 @@
 
     <div class="header">
         <div class="header-left">
-            <a href="../index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Ana Sayfa</a>
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Ana Sayfa</a>
         </div>
         <div class="header-center">
             <h1>Gerçek-Tüzel Kişi Bilgi Formu</h1>
@@ -1195,13 +1199,13 @@
                     <div class="a4-page" id="a4Document">
                         
                         <div class="form-pdf-box">
-                            <!-- Üst Gri Başlık -->
+                            <!-- Üst Gri Başlık (Kalın) -->
                             <div class="form-pdf-header">
                                 <div>FEN İŞLERİ DAİRESİ BAŞKANLIĞI</div>
                                 <div>GERÇEK / TÜZEL KİŞİ BİLGİ FORMU</div>
                             </div>
 
-                            <!-- 8 Satırlık Veri Tablosu (Yeni Form.pdf Yapısı) -->
+                            <!-- 8 Satırlık Veri Tablosu (Etiketler Kalın, Girilen Veriler Normal) -->
                             <table class="form-pdf-rows">
                                 <colgroup>
                                     <col class="col-left">
@@ -1209,7 +1213,7 @@
                                 </colgroup>
                                 <tbody>
                                     <tr class="row-first">
-                                        <td class="c-lbl">HAK SAHİBİNİN ADI SOYASI ÜNVANI</td>
+                                        <td class="c-lbl">HAK SAHİBİNİN ADI SOYADI/ÜNVANI</td>
                                         <td class="c-val" id="prev_adsoyad" data-field="adsoyad"></td>
                                     </tr>
                                     <tr>
@@ -1243,7 +1247,7 @@
                                 </tbody>
                             </table>
 
-                            <!-- Alt İmza / Tarih / Müdür Kutusu -->
+                            <!-- Alt İmza / Tarih / Müdür Kutusu (Kalın) -->
                             <div class="form-pdf-bottom-area">
                                 <div class="form-pdf-sign-block">
                                     <div class="sign-date" id="prev_tarih" data-field="tarih"></div>
@@ -1849,7 +1853,7 @@
             event.target.value = '';
         }
 
-        // --- KAYMASIZ, BİREBİR YENİ Form.pdf A4 CANVAS -> PDF ÜRETİCİ ---
+        // --- KAYMASIZ, BİREBİR A4 CANVAS -> PDF ÜRETİCİ ---
         function getWrappedLines(ctx, text, maxWidth) {
             if (!text) return [];
             const words = text.trim().split(/\s+/);
@@ -1889,7 +1893,7 @@
             const headerH = 42;
             const colSplitX = boxX + Math.round(boxW * 0.449); // 362.5px
 
-            // 1. Üst Gri Başlık Kutusu
+            // 1. Üst Gri Başlık Kutusu (KALIN)
             ctx.fillStyle = '#d9d9d9';
             ctx.fillRect(boxX, boxY, boxW, headerH);
 
@@ -1908,18 +1912,18 @@
             ctx.lineTo(boxX + boxW, boxY + headerH);
             ctx.stroke();
 
-            // 2. 8 Satırlık Veri Tablosu (Yeni Form.pdf Düzeni)
+            // 2. 8 Satırlık Veri Tablosu
             const getV = (id) => (document.getElementById(id)?.value || "");
             const adresText = getV('adres');
 
-            // Adres uzunluğuna göre 8. satır yüksekliğini hesapla
-            ctx.font = 'bold 12.2px "Courier New", Courier, monospace';
+            // Adres uzunluğuna göre 8. satır yüksekliğini hesapla (NORMAL YAZI)
+            ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
             const rightColMaxW = (boxX + boxW) - colSplitX - 16;
             const adresLines = getWrappedLines(ctx, adresText, rightColMaxW);
             const adresRowH = Math.max(20, adresLines.length * 16 + 6);
 
             const rows = [
-                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYASI ÜNVANI', val: getV('adsoyad') },
+                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYADI/ÜNVANI', val: getV('adsoyad') },
                 { h: 20, lbl: 'GERÇEK KİŞİ T.C. NUMARASI', val: getV('tc') },
                 { h: 20, lbl: 'VERGİ DAİRESİ', val: getV('vdairesi') },
                 { h: 20, lbl: 'VERGİ NUMARASI', val: getV('vno') },
@@ -1933,27 +1937,27 @@
             rows.forEach((r) => {
                 const midY = currY + r.h / 2 + 0.5;
 
-                // Sol etiket
+                // Sol etiket: KALIN (BOLD)
                 if (r.lbl) {
-                    ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
+                    ctx.font = 'bold 12.2px "Courier New", Courier, monospace';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
                     ctx.fillStyle = '#000000';
                     ctx.fillText(r.lbl, boxX + 6, r.isMultiline ? currY + 10.5 : midY);
                 }
 
-                // Sağ değer
+                // Sağ değer (Doldurulan Veriler): NORMAL
                 if (r.val) {
                     ctx.textAlign = 'left';
                     ctx.fillStyle = '#000000';
                     if (r.isMultiline && r.lines.length > 1) {
-                        ctx.font = 'bold 12.2px "Courier New", Courier, monospace';
+                        ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
                         ctx.textBaseline = 'middle';
                         r.lines.forEach((ln, idx) => {
                             ctx.fillText(ln, colSplitX + 10, currY + 10.5 + idx * 16);
                         });
                     } else {
-                        ctx.font = 'bold 12.8px "Courier New", Courier, monospace';
+                        ctx.font = 'normal 12.6px "Courier New", Courier, monospace';
                         ctx.textBaseline = 'middle';
                         ctx.fillText(r.val, colSplitX + 10, midY);
                     }
@@ -1976,7 +1980,7 @@
             ctx.lineTo(colSplitX, currY);
             ctx.stroke();
 
-            // 3. Sağ Alt İmza / Tarih / Müdür Bloğu
+            // 3. Sağ Alt İmza / Tarih / Müdür Bloğu: KALIN (BOLD)
             const signCenterX = boxX + boxW - 24 - 155;
             const bottomY = boxY + boxH;
             const tarihStr = formatPreviewDate(getV('tarih'));
