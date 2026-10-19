@@ -498,7 +498,7 @@
         }
 
         /* ==========================================================
-           BİREBİR Form.pdf A4 SAYFASI (794px x 1123px)
+           BİREBİR YENİ Form.pdf A4 SAYFASI (794px x 1123px)
            ========================================================== */
         .a4-page {
             width: 794px;
@@ -582,9 +582,17 @@
             font-weight: 700;
             font-size: 12.8px;
         }
-        .form-pdf-rows tr.row-blank-8 td {
+        .form-pdf-rows tr.row-adres-8 td {
             border-bottom: 2px solid #000000;
-            height: 20px;
+            min-height: 20px;
+            height: auto;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+        .form-pdf-rows tr.row-adres-8 td.c-val {
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.25;
         }
 
         .form-pdf-bottom-area {
@@ -594,15 +602,6 @@
             font-family: "Courier New", Courier, monospace;
             font-size: 12.5px;
             color: #000000;
-        }
-
-        .form-pdf-adres-line {
-            line-height: 1.45;
-            word-break: break-word;
-            padding-right: 8px;
-        }
-        .form-pdf-adres-line .adres-val {
-            font-weight: 700;
         }
 
         .form-pdf-sign-block {
@@ -1202,7 +1201,7 @@
                                 <div>GERÇEK / TÜZEL KİŞİ BİLGİ FORMU</div>
                             </div>
 
-                            <!-- 8 Satırlık Veri Tablosu -->
+                            <!-- 8 Satırlık Veri Tablosu (Yeni Form.pdf Yapısı) -->
                             <table class="form-pdf-rows">
                                 <colgroup>
                                     <col class="col-left">
@@ -1210,7 +1209,7 @@
                                 </colgroup>
                                 <tbody>
                                     <tr class="row-first">
-                                        <td class="c-lbl">HAK SAHİBİNİN ADI SOYASI/ÜNVANI</td>
+                                        <td class="c-lbl">HAK SAHİBİNİN ADI SOYASI ÜNVANI</td>
                                         <td class="c-val" id="prev_adsoyad" data-field="adsoyad"></td>
                                     </tr>
                                     <tr>
@@ -1237,19 +1236,15 @@
                                         <td class="c-lbl">TELEFON NUMARASI</td>
                                         <td class="c-val" id="prev_tel" data-field="tel"></td>
                                     </tr>
-                                    <tr class="row-blank-8">
-                                        <td class="c-lbl">&nbsp;</td>
-                                        <td class="c-val">&nbsp;</td>
+                                    <tr class="row-adres-8">
+                                        <td class="c-lbl">ADRES:</td>
+                                        <td class="c-val" id="prev_adres" data-field="adres"></td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            <!-- Alt Adres ve İmza / Müdür Kutusu -->
+                            <!-- Alt İmza / Tarih / Müdür Kutusu -->
                             <div class="form-pdf-bottom-area">
-                                <div class="form-pdf-adres-line" data-field="adres">
-                                    <span>Adres : </span><span class="adres-val" id="prev_adres"></span>
-                                </div>
-
                                 <div class="form-pdf-sign-block">
                                     <div class="sign-date" id="prev_tarih" data-field="tarih"></div>
                                     <div class="sign-mudur" id="prev_mudur" data-field="mudur"></div>
@@ -1523,11 +1518,9 @@
         function fitPreviewToWidth() {
             const viewport = document.getElementById('pdfViewport');
             if (!viewport) return;
-            // Yatayda tam sığması için iç boşluk (padding: 14px * 2 = 28px) düşülür
             let availW = viewport.clientWidth - 28;
             if (availW <= 0) return;
             setZoom(availW / 794, 'width');
-            // Dikey kaydırma çubuğu oluştuysa yeni kullanılabilir genişliğe göre tekrar hizala
             const newAvailW = viewport.clientWidth - 28;
             if (newAvailW > 0 && newAvailW !== availW) {
                 setZoom(newAvailW / 794, 'width');
@@ -1856,26 +1849,25 @@
             event.target.value = '';
         }
 
-        // --- KAYMASIZ, BİREBİR A4 CANVAS -> PDF ÜRETİCİ ---
-        function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
+        // --- KAYMASIZ, BİREBİR YENİ Form.pdf A4 CANVAS -> PDF ÜRETİCİ ---
+        function getWrappedLines(ctx, text, maxWidth) {
+            if (!text) return [];
+            const words = text.trim().split(/\s+/);
+            const lines = [];
             let line = '';
-            let currY = y;
 
             for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
+                const testLine = line ? line + ' ' + words[n] : words[n];
                 const metrics = ctx.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
-                    ctx.fillText(line.trimEnd(), x, currY);
-                    line = words[n] + ' ';
-                    currY += lineHeight;
+                if (metrics.width > maxWidth && line) {
+                    lines.push(line);
+                    line = words[n];
                 } else {
                     line = testLine;
                 }
             }
-            if (line) {
-                ctx.fillText(line.trimEnd(), x, currY);
-            }
+            if (line) lines.push(line);
+            return lines;
         }
 
         function renderExactA4Canvas() {
@@ -1916,17 +1908,25 @@
             ctx.lineTo(boxX + boxW, boxY + headerH);
             ctx.stroke();
 
-            // 2. 8 Satırlık Veri Tablosu
+            // 2. 8 Satırlık Veri Tablosu (Yeni Form.pdf Düzeni)
             const getV = (id) => (document.getElementById(id)?.value || "");
+            const adresText = getV('adres');
+
+            // Adres uzunluğuna göre 8. satır yüksekliğini hesapla
+            ctx.font = 'bold 12.2px "Courier New", Courier, monospace';
+            const rightColMaxW = (boxX + boxW) - colSplitX - 16;
+            const adresLines = getWrappedLines(ctx, adresText, rightColMaxW);
+            const adresRowH = Math.max(20, adresLines.length * 16 + 6);
+
             const rows = [
-                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYASI/ÜNVANI', val: getV('adsoyad') },
+                { h: 29, lbl: 'HAK SAHİBİNİN ADI SOYASI ÜNVANI', val: getV('adsoyad') },
                 { h: 20, lbl: 'GERÇEK KİŞİ T.C. NUMARASI', val: getV('tc') },
                 { h: 20, lbl: 'VERGİ DAİRESİ', val: getV('vdairesi') },
                 { h: 20, lbl: 'VERGİ NUMARASI', val: getV('vno') },
                 { h: 20, lbl: 'BANKA VE ŞUBE ADI', val: getV('banka') },
                 { h: 20, lbl: 'İBAN NUMARASI', val: getV('iban') },
                 { h: 20, lbl: 'TELEFON NUMARASI', val: getV('tel') },
-                { h: 20, lbl: '', val: '', thickBottom: true }
+                { h: adresRowH, lbl: 'ADRES:', val: adresText, thickBottom: true, isMultiline: true, lines: adresLines }
             ];
 
             let currY = boxY + headerH;
@@ -1937,16 +1937,26 @@
                 if (r.lbl) {
                     ctx.font = 'normal 12.2px "Courier New", Courier, monospace';
                     ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
                     ctx.fillStyle = '#000000';
-                    ctx.fillText(r.lbl, boxX + 6, midY);
+                    ctx.fillText(r.lbl, boxX + 6, r.isMultiline ? currY + 10.5 : midY);
                 }
 
                 // Sağ değer
                 if (r.val) {
-                    ctx.font = 'bold 12.8px "Courier New", Courier, monospace';
                     ctx.textAlign = 'left';
                     ctx.fillStyle = '#000000';
-                    ctx.fillText(r.val, colSplitX + 10, midY);
+                    if (r.isMultiline && r.lines.length > 1) {
+                        ctx.font = 'bold 12.2px "Courier New", Courier, monospace';
+                        ctx.textBaseline = 'middle';
+                        r.lines.forEach((ln, idx) => {
+                            ctx.fillText(ln, colSplitX + 10, currY + 10.5 + idx * 16);
+                        });
+                    } else {
+                        ctx.font = 'bold 12.8px "Courier New", Courier, monospace';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(r.val, colSplitX + 10, midY);
+                    }
                 }
 
                 currY += r.h;
@@ -1966,29 +1976,15 @@
             ctx.lineTo(colSplitX, currY);
             ctx.stroke();
 
-            // 3. Alt Adres Alanı
-            const adresTopY = currY + 26;
-            ctx.font = 'normal 12.5px "Courier New", Courier, monospace';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
-            const prefix = 'Adres : ';
-            ctx.fillText(prefix, boxX + 5, adresTopY);
-
-            const prefixW = ctx.measureText(prefix).width;
-            const adresVal = getV('adres');
-            if (adresVal) {
-                ctx.font = 'bold 12.5px "Courier New", Courier, monospace';
-                wrapCanvasText(ctx, adresVal, boxX + 5 + prefixW, adresTopY, boxW - prefixW - 18, 18);
-            }
-
-            // 4. Sağ Alt İmza / Tarih / Müdür Bloğu
-            const signCenterX = boxX + boxW - 24 - 155; // sağdan 24px içeride, 310px genişlikli bloğun ortası
+            // 3. Sağ Alt İmza / Tarih / Müdür Bloğu
+            const signCenterX = boxX + boxW - 24 - 155;
             const bottomY = boxY + boxH;
             const tarihStr = formatPreviewDate(getV('tarih'));
             const mudurStr = getV('mudur');
             const unvanStr = getV('unvan');
 
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
             if (tarihStr) {
                 ctx.font = 'bold 13px "Courier New", Courier, monospace';
                 ctx.fillText(tarihStr, signCenterX, bottomY - 90);
@@ -2002,7 +1998,7 @@
                 ctx.fillText(unvanStr, signCenterX, bottomY - 38);
             }
 
-            // 5. Dış Kalın Çerçeve
+            // 4. Dış Kalın Çerçeve
             ctx.lineWidth = 2;
             ctx.strokeRect(boxX, boxY, boxW, boxH);
 
@@ -2031,7 +2027,6 @@
                         unit: 'mm',
                         format: 'a4'
                     });
-                    // Tam (0, 0) noktasından 210x297mm A4 boyutunda yerleştirir, kayma/boşluk oluşmaz
                     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
                     pdf.save(dosyaAdi);
 
@@ -2086,5 +2081,3 @@
     </script>
 </body>
 </html>
-
-
